@@ -11,13 +11,13 @@
   branch = "master"
   name = "github.com/neocarton/glog"
   packages = ["."]
-  revision = "ac50656b73223c9f2a75c22e734ee85a61d64bb8"
+  revision = "60ebec05497c7b05f14dd0e4e3511a9400489d96"
 
 [[projects]]
   branch = "master"
   name = "github.com/neocarton/gsin"
   packages = ["."]
-  revision = "c6a8d0e7103eb15defa60abe794404b1fe41ee6a"
+  revision = "d95533573d0c408c0278f848407a87cf31361d56"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -29,7 +29,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "5b15430b70e38eb7f9c844f97c25f25a246d5c63"
+  revision = "301114b31cced3624480dfb114ca1b495ec69aa5"
 
 [solve-meta]
   analyzer-name = "dep"
