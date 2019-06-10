@@ -34,11 +34,13 @@ var mockedResponseError error
 
 func newMockedAPIClient() *mockedAPIClient {
 	c := &mockedAPIClient{*NewGoHTTPClient(testClientName, testBaseURL, testConfig)}
+	// TODO use reflection to mock
 	return c
 }
 
 // doSend is a mock function
 func (api *mockedAPIClient) doSend(req *http.Request) (*http.Response, error) {
+	logger.Debugf("Executing mocked doSend()")
 	body := ioutil.NopCloser(bytes.NewReader([]byte(mockedResponseBody)))
 	res := &http.Response{Body: body}
 	return res, mockedResponseError

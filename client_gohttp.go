@@ -31,48 +31,56 @@ func NewGoHTTPClient(name string, baseURL string, config Config) *GoHTTPClient {
 }
 
 // Name return client name
-func (api *GoHTTPClient) Name() string {
-	return api.name
+func (client *GoHTTPClient) Name() string {
+	return client.name
 }
 
 // BaseURL return base URL
-func (api *GoHTTPClient) BaseURL() string {
-	return api.baseURL
+func (client *GoHTTPClient) BaseURL() string {
+	return client.baseURL
 }
 
 // Config return config
-func (api *GoHTTPClient) Config() Config {
-	return api.config
+func (client *GoHTTPClient) Config() Config {
+	return client.config
 }
 
 // Do do send HTTP request
-func (api *GoHTTPClient) Do(result interface{}, method string, path string, params interface{},
+func (client *GoHTTPClient) Do(result interface{}, method string, path string, params interface{},
 	consumeContentType string, produceContentType string) error {
-	logger.Debugf("Start to call API with base-URL '%s', path '%s', method '%s' and parameter %+v", api.baseURL, path, method, params)
+	logger.Debugf("Start to call API with base-URL '%s', path '%s', method '%s' and parameter %+v", client.baseURL, path, method, params)
 	// Prepare request
-	req, err := BuildRequest(method, api.baseURL, path, params, consumeContentType, produceContentType)
+	req, err := BuildRequest(method, client.baseURL, path, params, consumeContentType, produceContentType)
 	if err != nil {
-		message := fmt.Sprintf("Failed to build request for API with base-URL '%s', path '%s', method '%s' and parameter %+v", api.baseURL, path, method, params)
+		message := fmt.Sprintf("Failed to build request for API with base-URL '%s', path '%s', method '%s' and parameter %+v", client.baseURL, path, method, params)
 		logger.Errorf(message, err)
 		err = gsin.InitError(&gsin.Error{}, message, err, nil)
 		return err
 	}
 	httpReq, err := toHTTPRequest(req)
 	if err != nil {
-		message := fmt.Sprintf("Failed to create HTTP request for API: %+v", req)
+		message := fmt.Sprintf("Failed to create HTTP request for API %+v", req)
 		logger.Errorf(message, err)
 		err = gsin.InitError(&gsin.Error{}, message, err, nil)
 		return err
 	}
 	// Send HTTP request
-	res, err := api.httpClient.Do(httpReq)
+	res, err := client.doSend(httpReq)
 	if err != nil {
-		message := fmt.Sprintf("Failed to call API: %+v", req)
+		message := fmt.Sprintf("Failed to call API %+v", req)
 		logger.Errorf(message, err)
 		err = gsin.InitError(&gsin.Error{}, message, err, nil)
 		return err
 	}
-	logger.Debugf("API %+v response: %+v", req, res)
+	logger.Debugf("API %+v responded: %+v", req, res)
+	// Check status
+	status := res.StatusCode
+	if status != 200 {
+		message := fmt.Sprintf("API %+v responded with status '%d'", req, status)
+		logger.Errorf(message, err)
+		err = gsin.InitError(&gsin.Error{}, message, err, nil)
+		return err
+	}
 	// Parse response
 	defer res.Body.Close()
 	var data []byte
@@ -93,8 +101,8 @@ func (api *GoHTTPClient) Do(result interface{}, method string, path string, para
 	return err
 }
 
-func (api *GoHTTPClient) doSend(req *http.Request) (*http.Response, error) {
-	return api.httpClient.Do(req)
+func (client *GoHTTPClient) doSend(req *http.Request) (*http.Response, error) {
+	return client.httpClient.Do(req)
 }
 
 func toHTTPRequest(req *Request) (*http.Request, error) {

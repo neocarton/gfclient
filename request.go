@@ -44,12 +44,13 @@ const (
 	MimeForm             = "application/x-www-form-urlencoded"
 	MimeFormMultiplePart = "multipart/form-data"
 
-	HeaderContentType = "Content-Type"
+	HeaderConsumeContentType = "Content-Type"
+	HeaderProduceContentType = "Accept"
 )
 
 const (
 	urlParamPattern      = "(.*)(<%s>)(.*)" // http://host/api/<param1>/something?param2=<param2>
-	urlParamValuePattern = "$1%s$2"
+	urlParamValuePattern = "${1}%s${3}"
 )
 
 type (
@@ -99,10 +100,14 @@ func BuildRequest(method string, baseURL string, path string, params interface{}
 		if err != nil {
 			return nil, err
 		}
-		// Set default content-type if not set
-		if reqParams.headers[HeaderContentType] == "" {
-			reqParams.headers[HeaderContentType] = consumeContentType
+		// Set default Content-Type header if not set
+		if reqParams.headers[HeaderConsumeContentType] == "" {
+			reqParams.headers[HeaderConsumeContentType] = consumeContentType
 		}
+	}
+	// Set default Accept header if not set
+	if reqParams.headers[HeaderProduceContentType] == "" {
+		reqParams.headers[HeaderProduceContentType] = consumeContentType
 	}
 	req := &Request{
 		Method:             method,
@@ -175,7 +180,6 @@ func parseTag(reqParams *requestParameters, field reflect.StructField, fieldValu
 }
 
 func buildURL(urlPattern string, pathParams map[string]string, queries map[string]string) string {
-	logger.Tracef("Build URL with pattern '%s', path parameters %+v and queries %+v", urlPattern, pathParams, queries)
 	url := urlPattern
 	for key, value := range pathParams {
 		pattern := fmt.Sprintf(urlParamPattern, regexp.QuoteMeta(key))

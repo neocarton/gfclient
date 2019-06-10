@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/neocarton/glog"
   packages = ["."]
-  revision = "60ebec05497c7b05f14dd0e4e3511a9400489d96"
+  revision = "53149ec00b3bbcfe3ea87df6fe21d97768095b5a"
 
 [[projects]]
   branch = "master"
