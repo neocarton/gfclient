@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/cast"
 )
 
 // Tag reflection tag
@@ -14,8 +16,8 @@ import (
 // SampleParams struct {
 // 	id          string      `gfclient:"path:id"`
 // 	name        string      `gfclient:"path"`
-// 	limit       int32       `gfclient:"query"`
-// 	offset      int32       `gfclient:"query"`
+// 	limit       int         `gfclient:"query"`
+// 	offset      int         `gfclient:"query"`
 // 	accessToken string      `gfclient:"header:Authorization"`
 // 	session     string      `gfclient:"cookie:session"`
 // 	data        interface{} `gfclient:"body"`
@@ -43,9 +45,18 @@ const (
 	MimeHTML             = "text/html"
 	MimeForm             = "application/x-www-form-urlencoded"
 	MimeFormMultiplePart = "multipart/form-data"
+	MimeCSV              = "application/CSV"
 
 	HeaderConsumeContentType = "Content-Type"
 	HeaderProduceContentType = "Accept"
+
+	StatusOk                  = http.StatusOK
+	StatusUnauthorized        = http.StatusUnauthorized
+	StatusForbidden           = http.StatusForbidden
+	StatusBadRequest          = http.StatusBadRequest
+	StatusNotFound            = http.StatusNotFound
+	StatusConflict            = http.StatusConflict
+	StatusInternalServerError = http.StatusInternalServerError
 )
 
 const (
@@ -68,7 +79,7 @@ type (
 		URL                string
 		Headers            map[string]string
 		Cookies            map[string]string
-		Data               []byte
+		Data               string
 		ConsumeContentType string
 		ProduceContentType string
 	}
@@ -114,7 +125,7 @@ func BuildRequest(method string, baseURL string, path string, params interface{}
 		URL:                url,
 		Headers:            reqParams.headers,
 		Cookies:            reqParams.cookies,
-		Data:               data,
+		Data:               string(data),
 		ConsumeContentType: consumeContentType,
 		ProduceContentType: produceContentType,
 	}
@@ -143,7 +154,9 @@ func parseParams(params interface{}) *requestParameters {
 	typ := reflect.TypeOf(params).Elem()
 	val := reflect.ValueOf(params).Elem()
 	for i := 0; i < typ.NumField(); i++ {
-		parseTag(reqParams, typ.Field(i), val.Field(i))
+		field := typ.Field(i)
+		fieldValue := val.Field(i)
+		parseTag(reqParams, field, fieldValue)
 	}
 	return reqParams
 }
@@ -167,13 +180,13 @@ func parseTag(reqParams *requestParameters, field reflect.StructField, fieldValu
 	value := fieldValue.Interface()
 	switch tagName {
 	case TagPath:
-		reqParams.paths[param] = fmt.Sprintf("%v", value)
+		reqParams.paths[param] = cast.ToString(value)
 	case TagQuery:
-		reqParams.queries[param] = fmt.Sprintf("%v", value)
+		reqParams.queries[param] = cast.ToString(value)
 	case TagHeader:
-		reqParams.headers[param] = fmt.Sprintf("%v", value)
+		reqParams.headers[param] = cast.ToString(value)
 	case TagCookie:
-		reqParams.cookies[param] = fmt.Sprintf("%v", value)
+		reqParams.cookies[param] = cast.ToString(value)
 	case TagBody:
 		reqParams.input = value
 	}

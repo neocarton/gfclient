@@ -11,8 +11,13 @@ import (
 )
 
 func toObject(object interface{}, data []byte, contentType string) error {
-	// Parse body
+	logger.Tracef("Convert to object with content-type '%s': %s", contentType, string(data))
 	var err error
+	if len(data) == 0 {
+		err = gsin.InitError(&gsin.Error{}, "Fail to convert to object: Input empty", nil, nil)
+		return err
+	}
+	// Parse body
 	switch contentType {
 	case MimeJSON:
 		err = json.Unmarshal(data, &object)
@@ -21,8 +26,8 @@ func toObject(object interface{}, data []byte, contentType string) error {
 		err = errors.New(message)
 	}
 	if err != nil {
-		message := fmt.Sprintf("Failed to parse data as content-type '%s'", contentType)
-		logger.Error(message)
+		message := fmt.Sprintf("Failed to convert to object with content-type '%s': %s", contentType, string(data))
+		logger.Errorf(message, err)
 		context := map[string]interface{}{"data": data}
 		err = gsin.InitError(&gsin.Error{}, message, err, context)
 	}
@@ -41,7 +46,7 @@ func toBytes(object interface{}, contentType string) ([]byte, error) {
 		err = errors.New(message)
 	}
 	if err != nil {
-		message := fmt.Sprintf("Failed to convert object to content-type '%s'", contentType)
+		message := fmt.Sprintf("Failed to convert to byte array with content-type '%s'", contentType)
 		logger.Error(message)
 		context := map[string]interface{}{"object": object}
 		err = gsin.InitError(&gsin.Error{}, message, err, context)
